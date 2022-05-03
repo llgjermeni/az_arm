@@ -1,0 +1,174 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string"
+    },
+    "storageAccountName": {
+      "type": "string"
+    },
+    "accountType": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "accessTier": {
+      "type": "string"
+    },
+    "minimumTlsVersion": {
+      "type": "string"
+    },
+    "supportsHttpsTrafficOnly": {
+      "type": "bool"
+    },
+    "allowBlobPublicAccess": {
+      "type": "bool"
+    },
+    "networkAclsBypass": {
+      "type": "string"
+    },
+    "networkAclsDefaultAction": {
+      "type": "string"
+    },
+    "isBlobSoftDeleteEnabled": {
+      "type": "bool"
+    },
+    "blobSoftDeleteRetentionDays": {
+      "type": "int"
+    },
+    "isVersioningEnabled": {
+      "type": "bool"
+    },
+    "isShareSoftDeleteEnabled": {
+      "type": "bool"
+    },
+    "shareSoftDeleteRetentionDays": {
+      "type": "int"
+    }
+    // "privateEndpointName": {
+    //   "type": "string"
+    // },
+    // "vnetName": {
+    //   "type": "string"
+    // },
+    // "subnetName": {
+    //   "type": "string"
+    // },
+    // "vnetRG": {
+    //   "type": "string"
+    // }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "name": "[parameters('storageAccountName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2019-06-01",
+      "location": "[parameters('location')]",
+      "tags": {
+        "Backup": "True",
+        "CostCenter": "Dummy",
+        "Department": "Dummy",
+        "DeployDate": "Dummy",
+        "Deployer": "Dummy",
+        "DeptName": "Dummy",
+        "EnvType": "Dummy",
+        "LOB": "LOB",
+        "LegalSubEntity": "LegalSubEntity",
+        "SenType": "SenType",
+        "Sensitivity": "Sensitivity",
+        "SubDivision": "SubDivision"
+      },
+      "properties": {
+        "accessTier": "[parameters('accessTier')]",
+        "minimumTlsVersion": "[parameters('minimumTlsVersion')]",
+        "supportsHttpsTrafficOnly": "[parameters('supportsHttpsTrafficOnly')]",
+        "allowBlobPublicAccess": "[parameters('allowBlobPublicAccess')]",
+        "networkAcls": {
+          "bypass": "[parameters('networkAclsBypass')]",
+          "defaultAction": "[parameters('networkAclsDefaultAction')]",
+          "ipRules": [],
+          "virtualNetworkRules": [
+            {
+              "id": "[resourceId(parameters('vnetRG'), 'Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnetName'))]",
+              "action": "Allow"
+            }
+          ]
+        }
+      },
+      "dependsOn": [],
+      "sku": {
+        "name": "[parameters('accountType')]"
+      },
+      "kind": "[parameters('kind')]"
+    },
+    {
+      "name": "[concat(parameters('storageAccountName'), '/default')]",
+      "type": "microsoft.storage/storageaccounts/blobServices",
+      "apiVersion": "2019-06-01",
+      "properties": {
+        "deleteRetentionPolicy": {
+          "enabled": "[parameters('isBlobSoftDeleteEnabled')]",
+          "days": "[parameters('blobSoftDeleteRetentionDays')]"
+        },
+        "isVersioningEnabled": "[parameters('isVersioningEnabled')]"
+      },
+      "dependsOn": [
+        "[concat('microsoft.storage/storageaccounts/', parameters('storageAccountName'))]"
+      ]
+    },
+    {
+      "name": "[concat(parameters('storageAccountName'), '/default')]",
+      "type": "microsoft.storage/storageaccounts/fileservices",
+      "apiVersion": "2019-06-01",
+      "properties": {
+        "shareDeleteRetentionPolicy": {
+          "enabled": "[parameters('isShareSoftDeleteEnabled')]",
+          "days": "[parameters('shareSoftDeleteRetentionDays')]"
+        }
+      },
+      "dependsOn": [
+        "[concat('microsoft.storage/storageaccounts/', parameters('storageAccountName'))]"
+      ]
+    }
+    // {
+    //   "apiVersion": "2019-04-01",
+    //   "name": "[parameters('privateEndpointName')]",
+    //   "type": "Microsoft.Network/privateEndpoints",
+    //   "location": "[parameters('location')]",
+    //   "properties": {
+    //     "privateLinkServiceConnections": [
+    //       {
+    //         "id": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', parameters('vnetRG'), '/providers/Microsoft.Network/privateEndpoints/privateLinkServiceConnections/', parameters('privateEndpointName'))]",
+    //         "name": "[parameters('privateEndpointName')]",
+    //         "properties": {
+    //           "privateLinkServiceId": "[concat('/subscriptions/', subscription().subscriptionId,'/resourceGroups/', resourceGroup().name, '/providers/microsoft.storage/storageaccounts/', parameters('storageAccountName'))]",
+    //           "groupIds": ["blob"]
+    //         }
+    //       }
+    //     ],
+    //     "manualPrivateLinkServiceConnections": [],
+    //     "subnet": {
+    //       "id": "[resourceId(parameters('vnetRG'), 'Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnetName'))]"
+    //     }
+    //   },
+    //   "tags": {
+    //     "Backup": "True",
+    //     "CostCenter": "Dummy",
+    //     "Department": "Dummy",
+    //     "DeployDate": "Dummy",
+    //     "Deployer": "Dummy",
+    //     "DeptName": "Dummy",
+    //     "EnvType": "Dummy",
+    //     "LOB": "LOB",
+    //     "LegalSubEntity": "LegalSubEntity",
+    //     "SenType": "SenType",
+    //     "Sensitivity": "Sensitivity",
+    //     "SubDivision": "SubDivision"
+    //   }
+    // }
+  ],
+  "outputs": {}
+}
